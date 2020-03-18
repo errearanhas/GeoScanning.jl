@@ -3,6 +3,9 @@ uuid = "6f076f23-2162-4a79-aecc-299a3176c096"
 authors = ["Renato Aranha"]
 version = "0.1.0"
 
+[deps]
+GeoStatsBase = "323cb8eb-fbf6-51c0-afd0-f8fba70507b2"
+
 [compat]
 julia = "1.3.1"
 
