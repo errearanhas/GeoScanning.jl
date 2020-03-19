@@ -40,8 +40,9 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   # main loop
   for p in visitseq
     if assignments[p] == 0 && !visited[p]
-      neighbs = epsRegionCheck(D, p, eps)
+      neighbs = epsRegionCheck(D, p, solver)
       if length(neighbs) >= minpts
+        C += 1
         countPoints = expandCluster!(problem, C, p, neighbs, eps, minpts, assignments, visited)
         push!(counts, countPoints)
       end
@@ -101,4 +102,4 @@ function expandCluster!(problem::LearningProblem, C, p, neighbs, eps, minpts, as
   countPoints
 end
 
-end # module 
+end # module
