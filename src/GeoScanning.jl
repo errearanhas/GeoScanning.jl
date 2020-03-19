@@ -4,8 +4,11 @@
 
 module GeoScanning
 
-using GeoStatsBase: LearningProblem, AbstractLearningSolver
-import Distances
+using GeoStatsBase
+using Distances
+
+import GeoStatsBase: solve
+
 export GeoSCAN
 
 """
@@ -74,28 +77,28 @@ end
 
 
 function expandCluster!(problem::LearningProblem, C, p, neighbs, eps, minpts, assignments, visited)
-    D = calcDistances(problem)
-    assignments[p] = C
-    countPoints = 1
-    while !isempty(neighbs)
-        q = popfirst!(neighbs)
-        if !visited[q]
-            q_neighbs = epsRegionCheck(D, q, eps)
-            if length(q_neighbs) >= minpts
-                for j in q_neighbs
-                    if assignments[j] == 0
-                        push!(neighbs, j) # add points in q neighborhood to p neighborhood
-                    end
-                end
-            end
-            visited[q] = true
+  D = calcDistances(problem)
+  assignments[p] = C
+  countPoints = 1
+  while !isempty(neighbs)
+    q = popfirst!(neighbs)
+    if !visited[q]
+      q_neighbs = epsRegionCheck(D, q, eps)
+      if length(q_neighbs) >= minpts
+        for j in q_neighbs
+          if assignments[j] == 0
+            push!(neighbs, j) # add points in q neighborhood to p neighborhood
+          end
         end
-        if assignments[q] == 0
-            assignments[q] = C
-            countPoints += 1
-        end
+      end
+      visited[q] = true
     end
-    countPoints
+    if assignments[q] == 0
+      assignments[q] = C
+      countPoints += 1
+    end
+  end
+  countPoints
 end
 
 end # module
