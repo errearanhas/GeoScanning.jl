@@ -101,4 +101,4 @@ function expandCluster!(problem::LearningProblem, C, p, neighbs, eps, minpts, as
   countPoints
 end
 
-end # module
+end # module 
