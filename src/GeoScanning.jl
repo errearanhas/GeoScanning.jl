@@ -23,19 +23,18 @@ struct GeoSCAN{T<:Real} <: AbstractLearningSolver
 end
 
 function solve(problem::LearningProblem, solver::GeoSCAN)
-end # module
+  eps = solver.eps
+  minpts = solver.minpts
 
-
-function GeoSCAN(eps::Real, minpts::Int)
   @assert eps > 0.0 "eps must be a positive value"
   @assert minpts > 0 "minpts must be a positive integer"
 
-  D = sourcedata(problem) # D::DenseMatrix{Real} representing square distance matrix
+  D = sourcedata(problem) # D::DenseMatrix{Float64} representing square distance matrix
 
-  # preparing
+  # preparing variables
   n = size(D, 1) # assuming D as a square distance matrix (n_samples by n_samples)
   visitseq = 1:n # sequence created to index all points
-  assignments = zeros(Int, n) # cluster assignment vector
+  assignments = zeros(Int, n) # cl  uster assignment vector
   visited = zeros(Bool, n) # array indicating visited points
   C = 0 # variable to mark cluster indexes
 
@@ -45,23 +44,24 @@ function GeoSCAN(eps::Real, minpts::Int)
           visited[p] = true
           neighbs = eps_region_check(D, p, eps)
           if length(neighbs) >= minpts
-            # here I have to implement some logic to expand cluster point by point
+            # here I still have to implement some logic to expand cluster point by point
 
           end
       end
   end
 end
 
-
-# function to check if point is a core point (count points in eps-neighborhood)
-function eps_region_check(D::DenseMatrix{Float64}, p::Int, eps::Real)
-    n = size(D,1)
-    neighbs = Int[]
-    distances = view(D,:,p) # array of distances of all points wrt point p
-    for i = 1:n
-        if distances[i] < eps
-            push!(neighbs, i)
-        end
-    end
-    neighbs # indexes of points in eps-neighborhood of p
+# function to check if point is a core point (and count number of points in eps-neighborhood)
+function eps_region_check(problem::LearningProblem, p::Int, solver::GeoSCAN)
+  D = sourcedata(problem) # D::DenseMatrix{Float64} representing square distance matrix
+  eps = solver.eps
+  n = size(D,1)
+  neighbs = Int[]
+  distances = view(D,:,p) # array of distances of all points wrt point p
+  for i = 1:n
+      if distances[i] < eps
+          push!(neighbs, i)
+      end
+  end
+  neighbs # indexes of points in eps-neighborhood of p
 end
