@@ -39,7 +39,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       if assignments[p] == 0 && !visited[p]
           neighbs = epsRegionCheck(D, p, eps)
           if length(neighbs) >= minpts
-          countPoints = expandCluster!(C, p, neighbs, eps, minpts, assignments, visited)
+          countPoints = expandCluster!(problem, C, p, neighbs, eps, minpts, assignments, visited)
           push!(counts, countPoints)
           end
           visited[p] = true
@@ -73,7 +73,7 @@ function calcDistances(problem::LearningProblem)
 end
 
 
-function expandCluster!(C, p, neighbs, eps, minpts, assignments, visited)
+function expandCluster!(problem::LearningProblem, C, p, neighbs, eps, minpts, assignments, visited)
     D = calcDistances(problem)
     assignments[p] = C
     countPoints = 1
