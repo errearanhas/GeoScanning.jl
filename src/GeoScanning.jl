@@ -4,8 +4,8 @@
 
 module GeoScanning
 
-import GeoStatsBase
-import LinearAlgebra
+using GeoStatsBase: LearningProblem, AbstractLearningSolver
+import Distances
 export GeoSCAN
 
 """
@@ -24,11 +24,12 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   @assert eps > 0.0 "eps must be a positive value"
   @assert minpts > 0 "minpts must be a positive integer"
 
-  D = calc_distances(problem)
+  D = calcDistances(problem)
 
   # preparing variables
   n = size(D, 1) # assuming D as a square distance matrix (n_samples by n_samples)
   visitseq = 1:n # sequence created to index all points
+  counts = Int[] # array to store quantity of points in each cluster
   assignments = zeros(Int, n) # cluster assignment vector
   visited = zeros(Bool, n) # array indicating visited points
   C = 0 # variable to mark cluster indexes
@@ -36,20 +37,20 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   # main loop
   for p in visitseq
       if assignments[p] == 0 && !visited[p]
-          visited[p] = true
-          neighbs = eps_region_check(D, p, eps)
+          neighbs = epsRegionCheck(D, p, eps)
           if length(neighbs) >= minpts
-            # here I still have to implement some logic to expand cluster point by point
-
+          countPoints = expandCluster!(C, p, neighbs, eps, minpts, assignments, visited)
+          push!(counts, countPoints)
           end
+          visited[p] = true
       end
   end
 end
 
 
 # function to check if point is a core point (and count number of points in eps-neighborhood)
-function eps_region_check(problem::LearningProblem, p::Int, solver::GeoSCAN)
-  D = calc_distances(problem)
+function epsRegionCheck(problem::LearningProblem, p::Int, solver::GeoSCAN)
+  D = calcDistances(problem)
   eps = solver.eps
   n = size(D,1)
   neighbs = Int[]
@@ -63,7 +64,7 @@ function eps_region_check(problem::LearningProblem, p::Int, solver::GeoSCAN)
 end
 
 
-function calc_distances(problem::LearningProblem)
+function calcDistances(problem::LearningProblem)
   tdata = targetdata(problem)
   vars  = collect(keys(variables(tdata))) # temporary hack
   npts  = npoints(tdata)
@@ -71,5 +72,30 @@ function calc_distances(problem::LearningProblem)
   D = pairwise(Euclidean(), F, dims=2) # D::AbstractData representing distance matrix
 end
 
+
+function expandCluster!(C, p, neighbs, eps, minpts, assignments, visited)
+    D = calcDistances(problem)
+    assignments[p] = C
+    countPoints = 1
+    while !isempty(neighbs)
+        q = popfirst!(neighbs)
+        if !visited[q]
+            q_neighbs = epsRegionCheck(D, q, eps)
+            if length(q_neighbs) >= minpts
+                for j in q_neighbs
+                    if assignments[j] == 0
+                        push!(neighbs, j) # add points in q neighborhood to p neighborhood
+                    end
+                end
+            end
+            visited[q] = true
+        end
+        if assignments[q] == 0
+            assignments[q] = C
+            countPoints += 1
+        end
+    end
+    countPoints
+end
 
 end # module
