@@ -26,11 +26,13 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
 end # module
 
 
-function GeoSCAN(D::DenseMatrix{Real}, eps::Real, minpts::Int)
+function GeoSCAN(eps::Real, minpts::Int)
   @assert eps > 0.0 "eps must be a positive value"
   @assert minpts > 0 "minpts must be a positive integer"
 
-# prepare
+  D = sourcedata(problem) # D::DenseMatrix{Real} representing square distance matrix
+
+  # preparing
   n = size(D, 1) # assuming D as a square distance matrix (n_samples by n_samples)
   visitseq = 1:n # sequence created to index all points
   assignments = zeros(Int, n) # cluster assignment vector
@@ -43,8 +45,7 @@ function GeoSCAN(D::DenseMatrix{Real}, eps::Real, minpts::Int)
           visited[p] = true
           neighbs = eps_region_check(D, p, eps)
           if length(neighbs) >= minpts
-
-
+            # here I have to implement some logic to expand cluster point by point
 
           end
       end
@@ -52,6 +53,7 @@ function GeoSCAN(D::DenseMatrix{Real}, eps::Real, minpts::Int)
 end
 
 
+# function to check if point is a core point (count points in eps-neighborhood)
 function eps_region_check(D::DenseMatrix{Float64}, p::Int, eps::Real)
     n = size(D,1)
     neighbs = Int[]
