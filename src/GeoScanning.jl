@@ -39,14 +39,14 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
 
   # main loop
   for p in visitseq
-      if assignments[p] == 0 && !visited[p]
-          neighbs = epsRegionCheck(D, p, eps)
-          if length(neighbs) >= minpts
-          countPoints = expandCluster!(problem, C, p, neighbs, eps, minpts, assignments, visited)
-          push!(counts, countPoints)
-          end
-          visited[p] = true
+    if assignments[p] == 0 && !visited[p]
+      neighbs = epsRegionCheck(D, p, eps)
+      if length(neighbs) >= minpts
+        countPoints = expandCluster!(problem, C, p, neighbs, eps, minpts, assignments, visited)
+        push!(counts, countPoints)
       end
+      visited[p] = true
+    end
   end
 end
 
@@ -59,9 +59,9 @@ function epsRegionCheck(problem::LearningProblem, p::Int, solver::GeoSCAN)
   neighbs = Int[]
   distances = view(D,:,p) # array of distances of all points wrt point p
   for i = 1:n
-      if distances[i] < eps
-          push!(neighbs, i)
-      end
+    if distances[i] < eps
+      push!(neighbs, i)
+    end
   end
   neighbs # indexes of points in eps-neighborhood of p
 end
