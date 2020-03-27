@@ -65,15 +65,6 @@ function epsRegionCheck(D, p::Int, solver::GeoSCAN)
 end
 
 
-function calcDistances(problem::LearningProblem)
-  tdata = targetdata(problem)
-  vars  = collect(keys(variables(tdata))) # temporary hack
-  npts  = npoints(tdata)
-  F = tdata[1:npts,vars] # feature matrix
-  D = pairwise(Euclidean(), F, dims=2) # D::AbstractData representing distance matrix
-end
-
-
 function expandCluster!(D, problem::LearningProblem, C, neighbs, eps, minpts, assignments, visited)
   countPoints = 1
   while !isempty(neighbs)
