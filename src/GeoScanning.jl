@@ -6,6 +6,7 @@ module GeoScanning
 
 using GeoStatsBase
 using Distances
+using NearestNeighbors
 
 import GeoStatsBase: solve
 
@@ -27,10 +28,10 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   @assert eps > 0.0 "eps must be a positive value"
   @assert minpts > 0 "minpts must be a positive integer"
 
-  D = calcDistances(problem)
+  D = data
 
   # preparing variables
-  n = size(D, 1) # assuming D as a square distance matrix (n_samples by n_samples)
+  n = size(D, 2) # assuming D as (n_features by n_samples)
   visitseq = 1:n # sequence created to index all points
   counts = Int[] # array to store quantity of points in each cluster
   assignments = zeros(Int, n) # cluster assignment vector
@@ -43,28 +44,24 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       neighbs = epsRegionCheck(D, p, solver)
       if length(neighbs) >= minpts
         C += 1
-        countPoints = expandCluster!(problem, C, p, neighbs, eps, minpts, assignments, visited)
+        assignments[p] = C
+        countPoints = expandCluster!(problem, C, neighbs, eps, minpts, assignments, visited)
         push!(counts, countPoints)
+        visited[p] = true
+      else
+        assignments[p] = -1 # marking point as noise
       end
-      visited[p] = true
     end
   end
 end
 
 
-# function to check if point is a core point (and count number of points in eps-neighborhood)
-function epsRegionCheck(problem::LearningProblem, p::Int, solver::GeoSCAN)
-  D = calcDistances(problem)
-  eps = solver.eps
-  n = size(D,1)
-  neighbs = Int[]
-  distances = view(D,:,p) # array of distances of all points wrt point p
-  for i = 1:n
-    if distances[i] < eps
-      push!(neighbs, i)
-    end
-  end
-  neighbs # indexes of points in eps-neighborhood of p
+# function to count number of points in eps-neighborhood
+function epsRegionCheck(D, p::Int, solver::GeoSCAN)
+  r = solver.eps
+  point = D[:,p]
+  kdtree = KDTree(D)
+  idxs = inrange(kdtree, point, r, true) # indexes of points in eps-neighborhood of p
 end
 
 
@@ -77,22 +74,20 @@ function calcDistances(problem::LearningProblem)
 end
 
 
-function expandCluster!(problem::LearningProblem, C, p, neighbs, eps, minpts, assignments, visited)
-  D = calcDistances(problem)
-  assignments[p] = C
+function expandCluster!(D, problem::LearningProblem, C, neighbs, eps, minpts, assignments, visited)
   countPoints = 1
   while !isempty(neighbs)
-    q = popfirst!(neighbs)
+    q = pop!(neighbs)
     if !visited[q]
+      visited[q] = true
       q_neighbs = epsRegionCheck(D, q, eps)
       if length(q_neighbs) >= minpts
         for j in q_neighbs
-          if assignments[j] == 0
+          if assignments[j] == 0 || assignments[j] == -1 # check if point is unlabeled or noise
             push!(neighbs, j) # add points in q neighborhood to p neighborhood
           end
         end
       end
-      visited[q] = true
     end
     if assignments[q] == 0
       assignments[q] = C
