@@ -28,10 +28,10 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   @assert eps > 0.0 "eps must be a positive value"
   @assert minpts > 0 "minpts must be a positive integer"
 
-  D = data
+  tdata = targetdata(problem)
 
   # preparing variables
-  n = size(D, 2) # assuming D as (n_features by n_samples)
+  n = size(tdata, 2) # assuming D as (n_features by n_samples)
   visitseq = 1:n # sequence created to index all points
   counts = Int[] # array to store quantity of points in each cluster
   assignments = zeros(Int, n) # cluster assignment vector
@@ -41,7 +41,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   # main loop
   for p in visitseq
     if assignments[p] == 0 && !visited[p]
-      neighbs = epsRegionCheck(D, p, solver)
+      neighbs = epsRegionCheck(tdata, p, solver)
       if length(neighbs) >= minpts
         C += 1
         assignments[p] = C
@@ -57,21 +57,21 @@ end
 
 
 # function to count number of points in eps-neighborhood
-function epsRegionCheck(D, p::Int, solver::GeoSCAN)
+function epsRegionCheck(tdata, p::Int, solver::GeoSCAN)
   r = solver.eps
-  point = D[:,p]
-  kdtree = KDTree(D)
+  point = tdata[:,p]
+  kdtree = KDTree(tdata)
   idxs = inrange(kdtree, point, r, true) # indexes of points in eps-neighborhood of p
 end
 
 
-function expandCluster!(D, problem::LearningProblem, C, neighbs, eps, minpts, assignments, visited)
+function expandCluster!(tdata, problem::LearningProblem, C, neighbs, eps, minpts, assignments, visited)
   countPoints = 1
   while !isempty(neighbs)
     q = pop!(neighbs)
     if !visited[q]
       visited[q] = true
-      q_neighbs = epsRegionCheck(D, q, eps)
+      q_neighbs = epsRegionCheck(tdata, q, eps)
       if length(q_neighbs) >= minpts
         for j in q_neighbs
           if assignments[j] == 0 || assignments[j] == -1 # check if point is unlabeled or noise
