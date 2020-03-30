@@ -16,8 +16,8 @@ export GeoSCAN
 GeoSCAN(eps, minpts)
 """
 struct GeoSCAN{T<:Real} <: AbstractLearningSolver
-  eps::T # the radius of a point neighborhood
-  minpts::Int # the minimum number of points in neighborhood to mark a point as a core point.
+  eps::T # radius of a point neighborhood
+  minpts::Int # minimum number of points in neighborhood to mark a point as a core point.
 end
 
 
@@ -36,11 +36,10 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   kdtree = KDTree(tdata)
 
   # preparing variables
-  n = size(tdata, 2) # assuming D as (n_features by n_samples)
-  visitseq = 1:n # sequence created to index all points
+  visitseq = 1:npts # sequence created to index all points
   counts = Int[] # array to store quantity of points in each cluster
-  assignments = zeros(Int, n) # cluster assignment vector
-  visited = zeros(Bool, n) # array indicating visited points
+  assignments = zeros(Int, npts) # cluster assignment vector
+  visited = zeros(Bool, npts) # array indicating visited points
   C = 0 # variable to mark cluster indexes
 
   # main loop
@@ -59,6 +58,8 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       end
     end
   end
+  @assert maximum(assignments) == length(counts) "max cluster index must be equal to the number of clusters"
+  @assert length(assignments) == npts "number of assigned points must be equal to the total number of data points"
   return assignments, counts
 end
 
@@ -75,7 +76,7 @@ function expandCluster!(tdata, kdtree, p, C, neighbs, eps, minpts, assignments, 
     q = pop!(neighbs)
     if !visited[q]
       visited[q] = true
-      point = tdata[:,p]
+      point = tdata[:,q]
       q_neighbs = epsRegionCheck(kdtree, point, eps)
       if length(q_neighbs) >= minpts
         for j in q_neighbs
