@@ -64,13 +64,14 @@ function epsRegionCheck(kdtree, point, eps)
 end
 
 
-function expandCluster!(tdata, problem::LearningProblem, C, neighbs, eps, minpts, assignments, visited)
+function expandCluster!(tdata, kdtree, problem::LearningProblem, C, neighbs, eps, minpts, assignments, visited)
   countPoints = 1
   while !isempty(neighbs)
     q = pop!(neighbs)
     if !visited[q]
       visited[q] = true
-      q_neighbs = epsRegionCheck(tdata, q, eps)
+      point = tdata[:,p]
+      q_neighbs = epsRegionCheck(kdtree, point, eps)
       if length(q_neighbs) >= minpts
         for j in q_neighbs
           if assignments[j] == 0 || assignments[j] == -1 # check if point is unlabeled or noise
