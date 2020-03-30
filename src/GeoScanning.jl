@@ -28,7 +28,11 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   @assert eps > 0.0 "eps must be a positive value"
   @assert minpts > 0 "minpts must be a positive integer"
 
-  tdata = targetdata(problem)
+  data = targetdata(problem)
+  vars  = collect(keys(variables(data)))
+  npts  = npoints(data)
+  tdata = data[1:npts, vars]'
+
   kdtree = KDTree(tdata)
 
   # preparing variables
@@ -47,7 +51,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       if length(neighbs) >= minpts
         C += 1
         assignments[p] = C
-        countPoints = expandCluster!(problem, C, neighbs, eps, minpts, assignments, visited)
+        countPoints = expandCluster!(tdata, kdtree, p, C, neighbs, eps, minpts, assignments, visited)
         push!(counts, countPoints)
         visited[p] = true
       else
@@ -55,6 +59,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       end
     end
   end
+  return assignments, counts
 end
 
 
@@ -64,7 +69,7 @@ function epsRegionCheck(kdtree, point, eps)
 end
 
 
-function expandCluster!(tdata, kdtree, problem::LearningProblem, C, neighbs, eps, minpts, assignments, visited)
+function expandCluster!(tdata, kdtree, p, C, neighbs, eps, minpts, assignments, visited)
   countPoints = 1
   while !isempty(neighbs)
     q = pop!(neighbs)
