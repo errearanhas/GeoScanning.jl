@@ -29,6 +29,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   @assert minpts > 0 "minpts must be a positive integer"
 
   tdata = targetdata(problem)
+  kdtree = KDTree(tdata)
 
   # preparing variables
   n = size(tdata, 2) # assuming D as (n_features by n_samples)
@@ -41,7 +42,8 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   # main loop
   for p in visitseq
     if assignments[p] == 0 && !visited[p]
-      neighbs = epsRegionCheck(tdata, p, solver)
+      point = tdata[:,p]
+      neighbs = epsRegionCheck(kdtree, point, eps)
       if length(neighbs) >= minpts
         C += 1
         assignments[p] = C
@@ -57,11 +59,8 @@ end
 
 
 # function to count number of points in eps-neighborhood
-function epsRegionCheck(tdata, p::Int, solver::GeoSCAN)
-  r = solver.eps
-  point = tdata[:,p]
-  kdtree = KDTree(tdata)
-  idxs = inrange(kdtree, point, r, true) # indexes of points in eps-neighborhood of p
+function epsRegionCheck(kdtree, point, eps)
+  idxs = inrange(kdtree, point, eps, true) # indexes of points in eps-neighborhood of p
 end
 
 
