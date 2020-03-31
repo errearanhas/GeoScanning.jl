@@ -5,9 +5,8 @@ using AbstractPlotting
 using Images
 
 
-function image_handling(img::AbstractArray, sampleSize::Int)
-  sample = rand(img, sampleSize)
-  imgArray = Float64.(channelview(RGB.(sample)))
+function image_handling(img::AbstractArray)
+  imgArray = Float64.(channelview(Images.RGB.(img)))
   r = vec(imgArray[1,:,:])
   g = vec(imgArray[2,:,:])
   b = vec(imgArray[2,:,:])
@@ -16,12 +15,13 @@ end
 
 
 function geoscan_dbscan(img::AbstractArray, eps::Real, minpts::Int, sampleSize::Int)
-  r,g,b,X = image_handling(img, sampleSize)
+  sample = rand(img, sampleSize)
+  r, g, b, X = image_handling(sample)
   newdata = GeoScanning.OrderedDict(:R=>r, :G=>g, :B=>b)
 
-  src = GeoScanning.RegularGridData{Float64}(newdata)
+  targ = GeoScanning.RegularGridData{Float64}(newdata)
   task = GeoScanning.ClusteringTask((:R,:G,:B), :label)
-  problem = GeoScanning.LearningProblem(src, src, task)
+  problem = GeoScanning.LearningProblem(targ, targ, task)
   solver = GeoScanning.GeoSCAN(eps, minpts)
 
   solution = GeoScanning.solve(problem, solver)
@@ -44,7 +44,8 @@ function makie_plot(img, sample, X, labels)
 end
 
 
-img = FileIO.load("src/images/akjoujt.jpg")
+img = FileIO.load("src/images/mauritania.jpg")
 image(img, scale_plot = false)
-sample, X, labels = geoscan_dbscan(img, 0.4, 2, 200)
+
+sample, X, labels = geoscan_dbscan(img, 0.2, 2, 500)
 makie_plot(img, sample, X, labels)
