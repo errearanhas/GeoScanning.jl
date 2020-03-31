@@ -1,23 +1,22 @@
 using Makie
-using Images
 using GeoScanning
+using FileIO
+using AbstractPlotting
+using Images
 
 
-img = Images.load("src/images/mauritania.jpg")
-
-
-function image_handling(img)
-  Imag = Float64.(channelview(RGB.(img)))
-  r = vec(Imag[1,:,:])
-  g = vec(Imag[2,:,:])
-  b = vec(Imag[2,:,:])
-  (r,g,b,Imag)
+function image_handling(img::AbstractArray, sampleSize::Int)
+  sample = rand(img, sampleSize)
+  imgArray = Float64.(channelview(RGB.(sample)))
+  r = vec(imgArray[1,:,:])
+  g = vec(imgArray[2,:,:])
+  b = vec(imgArray[2,:,:])
+  (r, g, b, imgArray)
 end
 
 
-function geoscan_dbscan(img::AbstractArray, eps::Real, minpts::Int)
-  sample = rand(img, 57)
-  r,g,b,X = image_handling(sample)
+function geoscan_dbscan(img::AbstractArray, eps::Real, minpts::Int, sampleSize::Int)
+  r,g,b,X = image_handling(img, sampleSize)
   newdata = GeoScanning.OrderedDict(:R=>r, :G=>g, :B=>b)
 
   src = GeoScanning.RegularGridData{Float64}(newdata)
@@ -28,30 +27,24 @@ function geoscan_dbscan(img::AbstractArray, eps::Real, minpts::Int)
   solution = GeoScanning.solve(problem, solver)
   labels = solution[1]
 
-  sample, X, labels
+  (sample, X, labels)
 end
 
 
-sample, X, labels = geoscan_dbscan(img, 2.0, 2)
-
-
 function makie_plot(img, sample, X, labels)
-  s1 = Makie.scatter(X[1,:], X[2,:], X[3,:], markersize = 0.1, color = labels)
+  s1 = Makie.scatter(X[1,:], X[2,:], X[3,:], markersize = 0.01, color = labels)
   s2=Scene()
   s2.camera = s1.camera
-  Makie.scatter!(s2, X[1,:], X[2,:], X[3,:], markersize = 0.1, color = sample)
+  Makie.scatter!(s2, X[1,:], X[2,:], X[3,:], markersize = 0.01, color = sample)
   cs1 = cameracontrols(s1)
   cs2 = cameracontrols(s2)
   cs1.rotationspeed[] = cs2.rotationspeed[] = 0.01
-  h = image(img)
+  h = image(img, scale_plot = false)
   vbox(s1, s2, h)
 end
 
 
-function feature_space_dbscan(img::AbstractArray)
-  sample, X, labels = geoscan_dbscan(img, 2.0, 2)
-  makie_plot(img, sample, X, labels)
-end
-
-
-feature_space_dbscan(img)
+img = FileIO.load("src/images/akjoujt.jpg")
+image(img, scale_plot = false)
+sample, X, labels = geoscan_dbscan(img, 0.4, 2, 200)
+makie_plot(img, sample, X, labels)
