@@ -1,7 +1,7 @@
 using Revise
 using GeoScanning
 
-data = rand(3, 10^10)
+data = rand(3, 10^3)
 newdata = GeoScanning.OrderedDict(:R=>data[1,:], :G=>data[2,:], :B=>data[3,:])
 
 src = GeoScanning.RegularGridData{Float64}(newdata)
