@@ -5,7 +5,6 @@
 module GeoScanning
 
 using GeoStatsBase
-using Distances
 using NearestNeighbors
 
 import GeoStatsBase: solve
