@@ -47,5 +47,5 @@ end
 img = FileIO.load("src/images/mauritania.jpg")
 image(img, scale_plot = false)
 
-sample, X, labels = geoscan_dbscan(img, 0.2, 2, 500)
+sample, X, labels = geoscan_dbscan(img, 0.05, 2, 5000)
 makie_plot(img, sample, X, labels)
