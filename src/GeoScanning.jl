@@ -37,61 +37,49 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
 
   # preparing variables
   visitseq = 1:npts # sequence created to index all points
-  counts = Int[] # array to store quantity of points in each cluster
-  assignments = zeros(Int, npts) # cluster assignment vector
-  visited = zeros(Bool, npts) # array indicating visited points
+  labels = zeros(Int, npts) # cluster label assignment vector
   C = 0 # variable to mark cluster indexes
 
   # main loop
   for p in visitseq
-    if assignments[p] == 0 && !visited[p]
-      point = tdata[:,p]
-      neighbs = epsRegionCheck(kdtree, point, eps)
-      if length(neighbs) >= minpts
-        C += 1
-        assignments[p] = C
-        countPoints = expandCluster!(tdata, kdtree, p, C, neighbs, eps, minpts, assignments, visited)
-        push!(counts, countPoints)
-        visited[p] = true
-      else
-        assignments[p] = -1 # marking point as noise
+    if labels[p] != 0 # checking if there is a label assigned to the point
+      continue
+    end
+    neighbs = RangeQuery(kdtree, p, eps, tdata)
+    if length(neighbs) < minpts
+      labels[p] = -1 # marking point as noise
+      continue
+    end
+    C += 1
+    labels[p] = C
+
+    while !isempty(neighbs)
+      q = pop!(neighbs)
+      if labels[q] == -1
+        labels[q] = C
+      end
+      if labels[q] !== 0
+        continue
+      end
+      q_neighbs = RangeQuery(kdtree, q, eps, tdata)
+      labels[q] = C
+      if length(q_neighbs) < minpts
+        continue
+      end
+      for j in q_neighbs
+        push!(neighbs, j)
       end
     end
   end
-  @assert maximum(assignments) == length(counts) "max cluster index must be equal to the number of clusters"
-  @assert length(assignments) == npts "number of assigned points must be equal to the total number of data points"
-  return assignments, counts
+  @assert length(labels) == npts "number of assigned points must be equal to the total number of data points"
+  return labels
 end
 
 
-# function to count number of points in eps-neighborhood
-function epsRegionCheck(kdtree, point, eps)
+# function to get indexes of points in eps-neighborhood
+function RangeQuery(kdtree, p, eps, tdata)
+  point = tdata[:,p]
   idxs = inrange(kdtree, point, eps, true) # indexes of points in eps-neighborhood of p
-end
-
-
-function expandCluster!(tdata, kdtree, p, C, neighbs, eps, minpts, assignments, visited)
-  countPoints = 1
-  while !isempty(neighbs)
-    q = pop!(neighbs)
-    if !visited[q]
-      visited[q] = true
-      point = tdata[:,q]
-      q_neighbs = epsRegionCheck(kdtree, point, eps)
-      if length(q_neighbs) >= minpts
-        for j in q_neighbs
-          if assignments[j] == 0 || assignments[j] == -1 # check if point is unlabeled or noise
-            push!(neighbs, j) # add points in q neighborhood to p neighborhood
-          end
-        end
-      end
-    end
-    if assignments[q] == 0
-      assignments[q] = C
-      countPoints += 1
-    end
-  end
-  countPoints
 end
 
 end # module
