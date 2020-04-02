@@ -35,33 +35,33 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   kdtree = KDTree(tdata)
 
   # preparing variables
-  visitseq = 1:npts # sequence created to index all points
-  labels = zeros(Int, npts) # cluster label assignment vector
+  DB = 1:npts # sequence created to index all database points
+  label = zeros(Int, npts) # cluster label assignment vector
   C = 0 # variable to mark cluster indexes
 
   # main loop
-  for p in visitseq
-    if labels[p] != 0 # checking if there is a label assigned to the point
+  for p in DB
+    if label[p] != 0 # checking if there is a cluster label assigned to the point
       continue
     end
     neighbs = RangeQuery(kdtree, p, eps, tdata)
     if length(neighbs) < minpts
-      labels[p] = -1 # marking point as noise
+      label[p] = -1 # marking point as noise
       continue
     end
     C += 1
-    labels[p] = C
-
+    label[p] = C
+    deleteat!(neighbs, neighbs .== p)
     while !isempty(neighbs)
       q = pop!(neighbs)
-      if labels[q] == -1
-        labels[q] = C
+      if label[q] == -1
+        label[q] = C
       end
-      if labels[q] !== 0
+      if label[q] !== 0
         continue
       end
       q_neighbs = RangeQuery(kdtree, q, eps, tdata)
-      labels[q] = C
+      label[q] = C
       if length(q_neighbs) < minpts
         continue
       end
@@ -70,8 +70,8 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       end
     end
   end
-  @assert length(labels) == npts "number of assigned points must be equal to the total number of data points"
-  return labels
+  @assert length(label) == npts "number of assigned points must be equal to the total number of data points"
+  return label
 end
 
 
