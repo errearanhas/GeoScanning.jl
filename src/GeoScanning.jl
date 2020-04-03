@@ -27,12 +27,14 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   @assert eps > 0.0 "eps must be a positive value"
   @assert minpts > 0 "minpts must be a positive integer"
 
-  data = targetdata(problem)
-  vars  = collect(keys(variables(data)))
-  npts  = npoints(data)
-  tdata = data[1:npts, vars]'
+  tdata = targetdata(problem)
+  ptask = task(problem)
+  vars  = collect(features(ptask))
+  outp = outputvars(ptask)[1]
+  npts  = npoints(tdata)
+  X = data[1:npts, vars]'
 
-  kdtree = KDTree(tdata)
+  kdtree = KDTree(X)
 
   # preparing variables
   DB = 1:npts # sequence created to index all database points
@@ -44,7 +46,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
     if label[p] != 0 # checking if there is a cluster label assigned to the point
       continue
     end
-    neighbs = RangeQuery(kdtree, p, eps, tdata)
+    neighbs = inrange(kdtree, X[:,p], eps, true)
     if length(neighbs) < minpts
       label[p] = -1 # marking point as noise
       continue
@@ -57,10 +59,10 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       if label[q] == -1
         label[q] = C
       end
-      if label[q] !== 0
+      if label[q] != 0
         continue
       end
-      q_neighbs = RangeQuery(kdtree, q, eps, tdata)
+      q_neighbs = inrange(kdtree, X[:,q], eps, true)
       label[q] = C
       if length(q_neighbs) < minpts
         continue
@@ -70,15 +72,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       end
     end
   end
-  @assert length(label) == npts "number of assigned points must be equal to the total number of data points"
-  return label
-end
-
-
-# function to get indexes of points in eps-neighborhood
-function RangeQuery(kdtree, p, eps, tdata)
-  point = tdata[:,p]
-  idxs = inrange(kdtree, point, eps, true) # indexes of points in eps-neighborhood of p
+  LearningSolution(domain(tdata), OrderedDict(outp => label))
 end
 
 end # module
