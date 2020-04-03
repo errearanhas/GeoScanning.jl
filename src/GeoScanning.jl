@@ -29,9 +29,11 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
 
   tdata = targetdata(problem)
   ptask = task(problem)
+
   vars  = collect(features(ptask))
   outp = outputvars(ptask)[1]
   npts  = npoints(tdata)
+
   X = data[1:npts, vars]'
 
   kdtree = KDTree(X)
