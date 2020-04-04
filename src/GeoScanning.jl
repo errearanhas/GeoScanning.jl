@@ -34,7 +34,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
   outp = outputvars(ptask)[1]
   npts  = npoints(tdata)
 
-  X = data[1:npts, vars]'
+  X = tdata[1:npts, vars]'
 
   kdtree = KDTree(X)
 
@@ -74,7 +74,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       end
     end
   end
-  LearningSolution(domain(tdata), OrderedDict(outp => label))
+  return LearningSolution(domain(tdata), OrderedDict(outp => label))
 end
 
 end # module
