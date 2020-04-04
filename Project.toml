@@ -1,3 +1,8 @@
+name = "GeoScanning"
+
 [deps]
 GeoStatsBase = "323cb8eb-fbf6-51c0-afd0-f8fba70507b2"
 NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
+
+[compat]
+julia = "1"
