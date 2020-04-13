@@ -19,7 +19,6 @@ struct GeoSCAN{T<:Real} <: AbstractLearningSolver
   minpts::Int # minimum number of points in neighborhood to mark a point as a core point.
 end
 
-
 function solve(problem::LearningProblem, solver::GeoSCAN)
   eps = solver.eps
   minpts = solver.minpts
