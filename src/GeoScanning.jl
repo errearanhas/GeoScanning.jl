@@ -55,7 +55,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
     end
     C += 1
     label[p] = C
-    deleteat!(neighbs, neighbs .= p)
+    deleteat!(neighbs, neighbs .== p)
     while !isempty(neighbs)
       q = pop!(neighbs)
       if label[q] == -1
