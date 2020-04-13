@@ -66,7 +66,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       end
       q_neighbs = inrange(kdtree, X[:,q], eps, true)
       label[q] = C
-      if length(q_neighbs) < minpts
+      if length(q_neighbs) <= minpts
         continue
       end
       for j in q_neighbs
