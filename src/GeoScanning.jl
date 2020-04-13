@@ -49,7 +49,7 @@ function solve(problem::LearningProblem, solver::GeoSCAN)
       continue
     end
     neighbs = inrange(kdtree, X[:,p], eps, true)
-    if length(neighbs) < minpts
+    if length(neighbs) <= minpts
       label[p] = -1 # marking point as noise
       continue
     end
